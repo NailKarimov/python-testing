@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en" data-default-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bookshop tests in Python</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: a till receipt. A rounding calculator against the oracle, the contract gaps Schemathesis found, two
+   threads sharing one connection, the mutant table, commands. */
+:root {
+  --bg: #eef0f4; --surface: #ffffff; --sunken: #e2e6ee; --ink: #141720; --muted: #5a6070; --line: #cfd4df;
+  --accent: #2f6db5; --accent-soft: #dde9f8; --px: #0f6b73; --px-soft: #d5eeee;
+  --ok: #17784b; --ok-soft: #d8f1e3; --bad: #b42318; --bad-soft: #fbe1dd; --warn: #8a6100; --warn-soft: #f7ebc8;
+  --font-display: 'Bricolage Grotesque', 'Public Sans', system-ui, sans-serif;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101219; --surface: #181b24; --sunken: #20242f; --ink: #e8eaf1; --muted: #a0a6b5; --line: #2e3341;
+    --accent: #8cb8f0; --accent-soft: #15284a; --px: #6fd3db; --px-soft: #0f3134;
+    --ok: #62d49a; --ok-soft: #12321f; --bad: #ff8a7d; --bad-soft: #3d1714; --warn: #f1c35a; --warn-soft: #3a2d0c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101219; --surface: #181b24; --sunken: #20242f; --ink: #e8eaf1; --muted: #a0a6b5; --line: #2e3341;
+  --accent: #8cb8f0; --accent-soft: #15284a; --px: #6fd3db; --px-soft: #0f3134;
+  --ok: #62d49a; --ok-soft: #12321f; --bad: #ff8a7d; --bad-soft: #3d1714; --warn: #f1c35a; --warn-soft: #3a2d0c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--font-body); margin: 0; }
+body[data-lang="ru"] [lang="en"], body[data-lang="en"] [lang="ru"] { display: none !important; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.1; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 50px); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(22px, 2.8vw, 30px); font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+a { color: var(--accent); }
+button { font-family: var(--font-body); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.eyebrow { font: 500 12px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+header.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 20px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { font: 500 13px var(--font-mono); background: transparent; color: var(--muted); border: 0; padding: 6px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.hero { display: grid; gap: 16px; padding-block: 8px; }
+.hero .lead { font-size: 18px; color: var(--muted); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--muted); }
+.facts b { font: 800 24px var(--font-display); color: var(--ink); margin-right: 6px; font-variant-numeric: tabular-nums; }
+section.station { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-block: 52px 0; }
+section.station > header { display: grid; gap: 8px; }
+.num { font: 700 13px var(--font-mono); color: var(--accent); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { font: 500 13.5px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 780px) { .two { grid-template-columns: minmax(0, 1fr); } }
+pre.code { margin: 0; background: var(--sunken); border-radius: 8px; padding: 10px 12px; font: 400 12.5px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+.tag { font: 600 11px var(--font-mono); padding: 2px 7px; border-radius: 4px; display: inline-block; white-space: nowrap; }
+.tag.ok { background: var(--ok-soft); color: var(--ok); } .tag.bad { background: var(--bad-soft); color: var(--bad); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); } .tag.ac { background: var(--accent-soft); color: var(--accent); }
+.tag.px { background: var(--px-soft); color: var(--px); }
+.state { border-radius: 12px; padding: 14px; display: grid; gap: 4px; font-size: 15px; }
+.state.ok { background: var(--ok-soft); } .state.bad { background: var(--bad-soft); } .state.warn { background: var(--warn-soft); }
+.state b { font-family: var(--font-display); font-size: 19px; }
+
+.ctl { display: grid; gap: 12px; }
+.ctl label { display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
+.ctl input { font: 500 15px var(--font-mono); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; font-size: 14.5px; align-items: baseline; }
+.kv b { font: 700 15px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.list { display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr); }
+.item { display: grid; grid-template-columns: 130px minmax(0, 1.3fr) minmax(0, 1fr); gap: 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14.5px; }
+@media (max-width: 760px) { .item { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.item code { overflow-wrap: anywhere; }
+.lanes { display: grid; gap: 8px; }
+.lane { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 13.5px; }
+.lane .track { display: flex; gap: 4px; flex-wrap: wrap; }
+.lane .track span { font: 600 11.5px var(--font-mono); padding: 5px 8px; border-radius: 6px; background: var(--sunken); }
+.lane .track span.w { background: var(--warn-soft); color: var(--warn); }
+.lane .track span.bad { background: var(--bad-soft); color: var(--bad); }
+.lane .track span.ok { background: var(--ok-soft); color: var(--ok); }
+dl.terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+@media (max-width: 760px) { dl.terms { grid-template-columns: minmax(0, 1fr); } }
+dl.terms div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+dt { font: 700 13.5px var(--font-mono); } dd { margin: 4px 0 0; font-size: 14.5px; color: var(--muted); }
+.cmds { display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr); }
+.cmd { display: flex; gap: 8px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 8px 14px; min-width: 0; }
+.cmd code { flex: 1; overflow-x: auto; white-space: nowrap; }
+.cmd button { font: 600 12px var(--font-mono); border: 1px solid var(--line); background: var(--sunken); color: var(--ink); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+footer { padding-top: 48px; font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body data-lang="ru">
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">python-testing · pytest · Hypothesis · Schemathesis · Locust</span>
+    <div class="seg" role="group" aria-label="Language">
+      <button type="button" id="lang-ru" data-l="ru" aria-pressed="true">RU</button>
+      <button type="button" id="lang-en" data-l="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 lang="ru">Тесты на Python: книжный магазин</h1>
+    <h1 lang="en">Testing in Python: a bookshop</h1>
+    <p class="lead" lang="ru">Свой Bookshop API на FastAPI и SQLite и 77 тестов вокруг него: API, контракт, свойства, интеграция с базой, безопасность и нагрузка. Тесты нашли в собственном сервисе четыре расхождения с контрактом и ошибку многопоточности, которую не видел ни один функциональный тест.</p>
+    <p class="lead" lang="en">A Bookshop API of our own on FastAPI and SQLite and 77 tests around it: API, contract, properties, database integration, security and load. The tests found four contract gaps in our own service and a threading bug no functional test saw.</p>
+    <div class="facts">
+      <span><b>77</b><span lang="ru">тестов за 16 с</span><span lang="en">tests in 16 s</span></span>
+      <span><b>4</b><span lang="ru">дыры в контракте</span><span lang="en">contract gaps</span></span>
+      <span><b>0.3 %</b><span lang="ru">500-х под нагрузкой — до исправления</span><span lang="en">500s under load, before the fix</span></span>
+      <span><b>11/11</b><span lang="ru">посаженных багов пойманы</span><span lang="en">planted bugs caught</span></span>
+    </div>
+  </section>
+
+  <section class="station" aria-labelledby="p1">
+    <header>
+      <span class="num">01</span>
+      <h2 id="p1" lang="ru">Округление: почему нужен Hypothesis</h2><h2 lang="en">Rounding: why Hypothesis</h2>
+      <p class="muted" lang="ru">Скидка округляется до копеек «как на кассе» — половина вверх. Банковское округление отличается только когда остаток ровно половина копейки. Ни одна из семи вручную подобранных корзин такого не содержала, и посаженный баг M1 поймал только Hypothesis, сравнивающий сервис с независимым оракулом. Введите сумму и скидку.</p>
+      <p class="muted" lang="en">The discount is rounded to cents the way a till does: half up. Banker's rounding differs only when exactly half a cent is left. None of the seven hand-picked baskets had that, and planted bug M1 was caught only by Hypothesis comparing the service with an independent oracle. Enter an amount and a discount.</p>
+    </header>
+    <div class="two">
+      <div class="panel ctl">
+        <label for="amt"><span lang="ru">Сумма товаров</span><span lang="en">Items total</span><input id="amt" value="33.25"></label>
+        <label for="rate"><span lang="ru">Скидка, %</span><span lang="en">Discount, %</span><input id="rate" value="10"></label>
+      </div>
+      <div class="panel kv" id="round" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="station" aria-labelledby="p2">
+    <header>
+      <span class="num">02</span>
+      <h2 id="p2" lang="ru">Что Schemathesis нашёл в нашем же контракте</h2><h2 lang="en">What Schemathesis found in our own contract</h2>
+      <p class="muted" lang="ru">Schemathesis читает /openapi.json, который публикует сам сервис, генерирует запросы и проверяет ответы. Каждая находка — место, где опубликованный контракт обещал не то, что делает код.</p>
+      <p class="muted" lang="en">Schemathesis reads the /openapi.json the service itself publishes, generates requests and checks the answers. Each finding is a place where the published contract promised something the code doesn't do.</p>
+    </header>
+    <div class="list" id="gaps"></div>
+  </section>
+
+  <section class="station" aria-labelledby="p3">
+    <header>
+      <span class="num">03</span>
+      <h2 id="p3" lang="ru">Locust и одно соединение на всех</h2><h2 lang="en">Locust and one connection for everyone</h2>
+      <p class="muted" lang="ru">FastAPI выполняет обработчики в пуле потоков. Пока все потоки делили одно соединение SQLite, чтение рядом с записью иногда получало пустую строку — 500. Функциональные тесты ходят по одному запросу и этого не видят; 30 пользователей Locust увидели за полминуты.</p>
+      <p class="muted" lang="en">FastAPI runs handlers in a thread pool. While every thread shared one SQLite connection, a read next to a write sometimes got an empty row: a 500. Functional tests send one request at a time and never see it; 30 Locust users saw it within half a minute.</p>
+    </header>
+    <div class="chips" id="conn-chips" role="group" aria-label="Connection"></div>
+    <div class="panel"><div class="lanes" id="lanes"></div><p class="muted" id="lanes-note"></p></div>
+  </section>
+
+  <section class="station" aria-labelledby="p4">
+    <header>
+      <span class="num">04</span>
+      <h2 id="p4" lang="ru">Посаженные баги</h2><h2 lang="en">Planted bugs</h2>
+      <p class="muted" lang="ru"><code>python scripts/mutants.py</code> сажает по одному багу и запускает весь набор.</p>
+      <p class="muted" lang="en"><code>python scripts/mutants.py</code> plants one bug at a time and runs the whole suite.</p>
+    </header>
+    <div class="list" id="mut"></div>
+  </section>
+
+  <section class="station" aria-labelledby="p5">
+    <header><span class="num">05</span><h2 id="p5" lang="ru">Словарь и команды</h2><h2 lang="en">Terms and commands</h2></header>
+    <dl class="terms" id="terms"></dl>
+    <div class="cmds" id="cmds"></div>
+  </section>
+
+  <footer>
+    <span lang="ru">Код: <a href="https://github.com/NailKarimov/python-testing">github.com/NailKarimov/python-testing</a> · текстом: <code>docs/python.md</code>.</span>
+    <span lang="en">Code: <a href="https://github.com/NailKarimov/python-testing">github.com/NailKarimov/python-testing</a> · as text: <code>docs/python.md</code>.</span>
+  </footer>
+</div>
+
+<script>
+const S = { lang: 'ru', conn: 'shared' };
+const L = (ru, en) => (S.lang === 'ru' ? ru : en);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = (id) => document.getElementById(id);
+function chips(id, items, cur, key) {
+  $(id).innerHTML = items.map(([v, ru, en]) => `<button type="button" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${L(ru, en)}</button>`).join('');
+  $(id).onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; renderAll(); };
+}
+
+/* 01: integer arithmetic in tenths of a cent to avoid float noise */
+function toMilli(str) { const m = String(str).trim().match(/^(\d+)(?:\.(\d{1,2}))?$/); if (!m) return null; return Number(m[1]) * 100 + Number((m[2] || '0').padEnd(2, '0')); }
+function renderRound() {
+  const cents = toMilli($('amt').value), rate = Number($('rate').value);
+  if (cents == null || !(rate >= 0 && rate <= 100)) { $('round').innerHTML = `<span>${L('Введите сумму вида 33.25 и процент 0–100', 'Enter an amount like 33.25 and a percentage 0–100')}</span>`; return; }
+  const raw = cents * rate; // hundredths of a cent
+  const whole = Math.floor(raw / 100), rest = raw % 100;
+  const up = rest >= 50 ? whole + 1 : whole;
+  const even = rest > 50 ? whole + 1 : rest < 50 ? whole : (whole % 2 ? whole + 1 : whole);
+  const f = (c) => (c / 100).toFixed(2);
+  const tie = rest === 50;
+  $('round').innerHTML = `<span>${L('Скидка точно', 'Exact discount')}</span><b>${(raw / 10000).toFixed(4)}</b><span>${L('Половина вверх (как на кассе)', 'Half up (like a till)')}</span><b>${f(up)}</b><span>${L('Банковское (M1)', "Banker's (M1)")}</span><b>${f(even)}</b>` +
+    `<span class="muted" style="grid-column:1/-1">${tie ? (up !== even ? L('Ровно половина копейки, а последняя цифра чётная: банковское правило оставляет её, касса округляет вверх — именно такую корзину нашёл Hypothesis.', 'Exactly half a cent and an even last digit: banker\'s rounding keeps it, the till rounds up. This is the kind of basket Hypothesis found.') : L('Половина копейки, но последняя цифра нечётная: оба правила округляют вверх. Попробуйте 33.25 и 10 %.', 'Half a cent, but the last digit is odd: both round up. Try 33.25 and 10 %.')) : L('Не половина копейки — оба правила дают одно и то же, тест с этой суммой баг не увидит.', 'Not half a cent: both rules agree, so a test with this amount cannot see the bug.')}</span>`;
+}
+$('amt').addEventListener('input', renderRound); $('rate').addEventListener('input', renderRound);
+
+/* 02 */
+const GAPS = [
+  ['GET /books/{id}', ['id = 2^63 доходил до SQLite и ронял сервис: 500.', 'id = 2^63 reached SQLite and crashed the service: 500.'], ['id ограничен 1 … 2^63 − 1 прямо в пути', 'ids limited to 1 … 2^63 − 1 in the path']],
+  ['max_price', ['Decimal публикуется как «число или строка»: "" и "1e999" валидны по схеме, сервис их не принимает.', 'Decimal is published as "number or string": "" and "1e999" are valid by the schema, the service rejects them.'], ['строка со строгим шаблоном', 'a string with a strict pattern']],
+  ['email', ['\\s в Python и в диалекте JSON Schema понимается по-разному (U+0085): «валидные» адреса отклонялись.', '\\s means different things in Python and in JSON Schema (U+0085): "valid" addresses were rejected.'], ['шаблон только из ASCII', 'an ASCII-only pattern']],
+  ['POST /orders 422', ['Неизвестный купон давал {"detail": "…"}, остальные 422 — список: два формата одного статуса.', 'An unknown coupon gave {"detail": "…"}, other 422s a list: two shapes for one status.'], ['купон проверяется как обычное поле', 'the coupon is validated like any field']],
+];
+function renderGaps() { $('gaps').innerHTML = GAPS.map((g) => `<div class="item"><code>${esc(g[0])}</code><span>${esc(L(...g[1]))}</span><span class="muted">${esc(L(...g[2]))}</span></div>`).join(''); }
+
+/* 03 */
+function renderLanes() {
+  chips('conn-chips', [['shared', 'Одно соединение (было)', 'One connection (before)'], ['per', 'Соединение на поток (стало)', 'One per thread (after)']], S.conn, 'conn');
+  const shared = S.conn === 'shared';
+  const lanes = shared
+    ? [['thread 1', [['BEGIN', 'w'], ['UPDATE stock', 'w'], ['INSERT order', 'w'], ['COMMIT', 'w']]], ['thread 2', [['SELECT books', ''], ['row → None', 'bad'], ['500', 'bad']]], ['thread 3', [['SELECT books', ''], ['12 rows', 'ok'], ['200', 'ok']]]]
+    : [['thread 1', [['conn #1', ''], ['BEGIN IMMEDIATE', 'w'], ['UPDATE', 'w'], ['COMMIT', 'w']]], ['thread 2', [['conn #2', ''], ['SELECT books', ''], ['12 rows', 'ok'], ['200', 'ok']]], ['thread 3', [['conn #3', ''], ['SELECT books', ''], ['12 rows', 'ok'], ['200', 'ok']]]];
+  $('lanes').innerHTML = lanes.map((l) => `<div class="lane"><b>${l[0]}</b><div class="track">${l[1].map((s) => `<span class="${s[1]}">${esc(s[0])}</span>`).join('')}</div></div>`).join('');
+  $('lanes-note').innerHTML = shared
+    ? L('Курсоры чтения и записи на одном соединении мешают друг другу. Под нагрузкой — 4 ошибки из 1 367 запросов (0.29 %). Регрессионный тест с 16 потоками падал 3 раза из 3.', 'Read and write cursors on one connection interfere. Under load: 4 errors in 1,367 requests (0.29 %). A regression test with 16 threads failed 3 times out of 3.')
+    : L('У каждого потока своё соединение, запись берёт блокировку BEGIN IMMEDIATE. Под нагрузкой 0 ошибок из 1 392, регрессионный тест зелёный.', 'Each thread has its own connection; writes take the BEGIN IMMEDIATE lock. Under load: 0 errors in 1,392; the regression test is green.');
+}
+
+const MUT = [
+  ['M1', ['банковское округление', "banker's rounding"], ['только Hypothesis-оракул', 'only the Hypothesis oracle']],
+  ['M2', ['бесплатная доставка с 50.01', 'free shipping from 50.01'], ['Hypothesis, пример 50.00', 'Hypothesis, example 50.00']],
+  ['M3', ['доставка до скидки', 'shipping before the discount'], ['таблица итогов', 'totals table']],
+  ['M5', ['нет проверки склада', 'no stock check'], ['последний экземпляр', 'last copy']],
+  ['M6', ['чужой заказ виден (BOLA)', "someone else's order visible (BOLA)"], ['безопасность', 'security']],
+  ['M7', ['подпись токена не проверяется', 'token signature not checked'], ['поддельные токены', 'forged tokens']],
+  ['M11', ['отложенная транзакция', 'deferred transaction'], ['10 покупателей на 3 книги', '10 customers, 3 copies']],
+];
+function renderMut() { $('mut').innerHTML = MUT.map((m) => `<div class="item"><b>${m[0]}</b><span>${esc(L(...m[1]))}</span><span class="muted">${esc(L(...m[2]))} · ${L('пойман', 'caught')}</span></div>`).join('') + `<p class="muted">${L('Ещё 4 (купоны, nosniff, размер страницы, e-mail) — тоже пойманы: 11 из 11. Первая версия M1 ломала импорт и «ловилась» по ошибочной причине — мутант должен быть рабочей программой с неправильным правилом.', 'Four more (coupons, nosniff, page size, e-mail) are caught too: 11 of 11. The first M1 broke an import and was "caught" for the wrong reason: a mutant must be a working program with a wrong rule.')}</p>`; }
+
+const TERMS = [
+  ['property-based testing', ['Тест задаёт правило для любых входных данных, а инструмент сам подбирает тысячи примеров и ужимает упавший до минимального.', 'A test states a rule for any input; the tool generates thousands of examples and shrinks a failing one to the smallest.']],
+  ['oracle', ['Независимый способ узнать правильный ответ — здесь отдельный расчёт итогов в tests/support.py.', 'An independent way to know the right answer: here, a separate total calculation in tests/support.py.']],
+  ['fixture scope', ['shop — один сервер на воркер, fresh_shop — свой сервер для теста, который меняет склад.', 'shop: one server per worker; fresh_shop: a server of its own for a test that changes stock.']],
+  ['equivalent mutant', ['Изменение, которое не меняет поведения. После исправления лишний lock стал таким — его убрали.', 'A change that changes no behaviour. After the fix a spare lock became one, so it went.']],
+];
+function renderTerms() { $('terms').innerHTML = TERMS.map((t) => `<div><dt>${esc(t[0])}</dt><dd>${L(...t[1])}</dd></div>`).join(''); }
+const CMDS = ['pip install -r requirements.txt', 'pytest -n 4', 'python scripts/mutants.py', 'locust -f load/locustfile.py --headless -u 30 -r 10 -t 45s --host http://127.0.0.1:8000 --csv load-results/run'];
+function renderCmds() { $('cmds').innerHTML = CMDS.map((c, i) => `<div class="cmd"><code id="cmd-${i}">${esc(c)}</code><button type="button" data-c="${i}">${L('Копировать', 'Copy')}</button></div>`).join(''); }
+$('cmds').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  const done = () => { b.textContent = L('Скопировано', 'Copied'); setTimeout(() => (b.textContent = L('Копировать', 'Copy')), 1500); };
+  const fallback = () => { const r = document.createRange(); r.selectNodeContents($('cmd-' + b.dataset.c)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+  try { navigator.clipboard.writeText(CMDS[+b.dataset.c]).then(done, fallback); } catch (err) { fallback(); }
+});
+
+function renderAll() { renderRound(); renderGaps(); renderLanes(); renderMut(); renderTerms(); renderCmds(); }
+function setLang(l) {
+  S.lang = l; document.body.dataset.lang = l; document.documentElement.lang = l;
+  $('lang-ru').setAttribute('aria-pressed', l === 'ru');
+  $('lang-en').setAttribute('aria-pressed', l === 'en');
+  try { localStorage.setItem('python-lang', l); } catch (e) {}
+  renderAll();
+}
+document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.l)));
+let start = document.documentElement.dataset.defaultLang || 'ru';
+try { start = localStorage.getItem('python-lang') || start; } catch (e) {}
+setLang(start);
+</script>
+</body>
+</html>
