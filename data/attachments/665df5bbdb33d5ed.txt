@@ -1,0 +1,6 @@
+GET https://jsonplaceholder.typicode.com/posts/0
+
+Status: 404
+
+Response body:
+{}

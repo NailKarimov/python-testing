@@ -1,0 +1,18 @@
+POST https://jsonplaceholder.typicode.com/posts
+
+Request body:
+{
+  "userId": 2,
+  "title": "Taceo uxor temptatio arbitro quo aliquid.",
+  "body": "Caterva conscendo concido thymum tardus cunae. Decipio tabula turba teneo volup. Adicio rem benigne coma numquam."
+}
+
+Status: 201
+
+Response body:
+{
+  "userId": 2,
+  "title": "Taceo uxor temptatio arbitro quo aliquid.",
+  "body": "Caterva conscendo concido thymum tardus cunae. Decipio tabula turba teneo volup. Adicio rem benigne coma numquam.",
+  "id": 101
+}
