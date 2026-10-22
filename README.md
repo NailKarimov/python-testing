@@ -1,73 +1,34 @@
-# qa-project-template
+# python-testing
 
-[![Tests](https://github.com/NailKarimov/qa-project-template/actions/workflows/tests.yml/badge.svg)](https://github.com/NailKarimov/qa-project-template/actions/workflows/tests.yml)
-[![Allure report](https://img.shields.io/badge/report-Allure-orange)](https://nailkarimov.github.io/qa-project-template/)
+[![Tests](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml/badge.svg)](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml)
+[![Allure report](https://img.shields.io/badge/report-Allure-orange)](https://nailkarimov.github.io/python-testing/)
 
-Starter template for test automation projects: **Playwright + TypeScript**, UI and API tests in one suite,
-**Allure** reporting with history, **GitHub Actions** CI, and code quality checks on every commit.
+API, contract, property-based, integration, security and load tests **in Python** on a Bookshop API of our own
+(FastAPI + SQLite): pytest, httpx, **Hypothesis**, **Schemathesis**, **Locust**, Allure, ruff and mypy (strict).
 
-Click **Use this template** to start a new project with everything below already set up.
+| Spec | What it proves |
+| --- | --- |
+| `api/test_catalogue` | listing, filters with boundaries, paging covers every book once, page-size limits, responses match the published OpenAPI schema |
+| `api/test_orders` | totals against an independent oracle (shipping threshold, coupons, half-up rounding), stock goes down, an order that cannot be filled reserves nothing, validation, e-mails unique case-insensitively |
+| `contract/test_openapi_fuzz` | Schemathesis: generated requests for every operation, no 5xx, documented status codes, bodies match the schema |
+| `property/test_pricing` | Hypothesis: 7 rules that hold for every basket, and agreement with the oracle |
+| `integration/test_database` | the stored order and lines, a failed order leaves no trace, 10 customers race for 3 copies, reads and writes together never fail |
+| `security/test_access` | 401 for missing, malformed and forged tokens, another customer's order is 404 (BOLA), security headers, no internals in errors, quotes in filters are data |
+| `load/locustfile.py` | Locust: browsers and buyers, p95 and error-rate budgets (CI job) |
 
-## What is inside
+**What the tests found in our own service:** four contract gaps from Schemathesis (a 500 on a 64-bit id, a
+too-generous `Decimal` schema, a regex that means different things in Python and JSON Schema…) and a
+thread-safety bug from Locust: one SQLite connection shared by worker threads made 0.3 % of requests fail under
+load while every functional test passed. **Mutation check:** 11 planted bugs, all caught; banker's rounding only by
+the Hypothesis oracle. Details: [`docs/python.md`](docs/python.md) · visual guide:
+[`docs/python.html`](https://nailkarimov.github.io/python-testing/python.html).
 
-| Area          | Files                                              | Details                                                                                  |
-| ------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Page objects  | `src/pages`                                        | `BasePage` plus one class per page; locators use `data-test` attributes                  |
-| API clients   | `src/api`                                          | `ApiClient` attaches every request and response to the report; one client per resource   |
-| Test data     | `src/data`                                         | Factories built on Faker; override fields for boundary and negative cases                |
-| Fixtures      | `src/fixtures.ts`                                  | Tests receive ready objects: `async ({ loginPage, posts }) => …`                         |
-| Configuration | `config/env.ts`, `.env.example`                    | Every URL and credential can be overridden by an environment variable                    |
-| Tests         | `tests/ui`, `tests/api`                            | Two Playwright projects; `@smoke` tag for the critical path                              |
-| Code quality  | `eslint.config.mjs`, `.prettierrc.json`, `.husky/` | ESLint with Playwright rules, Prettier, pre-commit checks via lint-staged                |
-| CI            | `.github/workflows/tests.yml`                      | Runs on push, PR, nightly and on demand; lint, type check, tests; Allure to GitHub Pages |
-| Documentation | `docs/test-plan.md`, `docs/test-report.md`         | Templates based on ISO/IEC/IEEE 29119-3                                                  |
-
-The example tests run against public demo targets: [Sauce Demo](https://www.saucedemo.com) for UI and
-[JSONPlaceholder](https://jsonplaceholder.typicode.com) for API. Replace them with your system under test.
-
-## Getting started
-
-Requirements: Node.js 22+, Java 17+ (for the Allure CLI).
+## Running it
 
 ```bash
-npm ci
-npx playwright install chromium
-cp .env.example .env      # optional: change targets or credentials
-
-npm test                  # all tests
-npm run test:api          # API tests only
-npm run test:ui           # UI tests only
-npm run test:smoke        # @smoke tests only
-npm run test:headed       # UI tests with a visible browser
-
-npm run lint              # ESLint
-npm run format            # Prettier
-npm run typecheck         # TypeScript
-
-npm run allure:generate && npm run allure:open
+python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+pytest -n 4
+python scripts/mutants.py
 ```
 
-## Starting a new project from this template
-
-1. **Use this template** → name the repository → clone it.
-2. Set the targets in `.env.example` and `config/env.ts`.
-3. Replace the example page objects, API clients and tests.
-4. Fill in `docs/test-plan.md` before writing tests and `docs/test-report.md` after the first full run.
-5. In the new repository: **Settings → Pages → Deploy from a branch → `gh-pages` / `(root)`**
-   to publish the Allure report.
-6. Update the badges and links at the top of this README.
-
-## Definition of Done for a portfolio project
-
-- [ ] README: what is tested, which standard, how to run, link to the report, known limitations
-- [ ] Test plan and summary report in `docs/`
-- [ ] Tests run with one command locally and in CI
-- [ ] Allure report published with at least three runs of history
-- [ ] Lint, format and type checks pass; no secrets in the repository
-
-## Conventions
-
-- Tests contain actions and assertions only; selectors live in page objects.
-- No fixed sleeps: rely on Playwright auto-waiting (`playwright/no-wait-for-timeout` is an error).
-- Test names describe expected behaviour: _"locked out user gets an error message"_.
-- One retry in CI only; retries stay visible in the report.
+Part of a QA portfolio: [github.com/NailKarimov](https://github.com/NailKarimov).

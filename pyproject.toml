@@ -1,0 +1,31 @@
+[project]
+name = "python-testing"
+version = "1.0.0"
+description = "API, integration, property-based, contract, security and load tests in Python (pytest, Hypothesis, Schemathesis, Locust) on a Bookshop API of our own."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["slow: longer tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "PT", "SIM", "RUF"]
+ignore = ["S101", "S311", "RUF001", "RUF002", "RUF003"]  # pytest asserts; load-test randomness; × and − in prose
+
+[tool.ruff.lint.per-file-ignores]
+"load/*" = ["S"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+exclude = ["load/"]
+
+[[tool.mypy.overrides]]
+module = "tests.conftest"
+disallow_untyped_calls = false  # allure-pytest has no type hints

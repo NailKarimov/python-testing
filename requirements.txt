@@ -1,0 +1,13 @@
+fastapi==0.159.1
+uvicorn==0.54.0
+httpx==0.28.1
+pydantic==2.14.1
+pytest==9.1.1
+pytest-xdist==3.8.0
+hypothesis==6.170.5
+schemathesis==4.32.3
+locust==2.47.0
+allure-pytest==2.16.2
+jsonschema==4.26.0
+ruff==0.17.1
+mypy==2.4.0

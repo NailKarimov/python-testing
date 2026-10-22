@@ -7,12 +7,6 @@ on:
   schedule:
     - cron: '0 3 * * *' # nightly, 03:00 UTC
   workflow_dispatch:
-    inputs:
-      project:
-        description: 'Which tests to run'
-        type: choice
-        options: [all, ui, api, smoke]
-        default: all
 
 permissions:
   contents: write # publish the Allure report to the gh-pages branch
@@ -24,44 +18,39 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: 22
-          cache: npm
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint, format and type check
+        run: |
+          ruff check .
+          ruff format --check .
+          mypy services tests
+
+      - name: Tests (API, contract, property-based, integration, security)
+        id: tests
+        continue-on-error: true
+        run: pytest -n 4 --alluredir=allure-results
 
       - uses: actions/setup-java@v5 # Allure CLI needs Java
+        if: always()
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Lint and type check
-        run: |
-          npm run lint
-          npm run format:check
-          npm run typecheck
-
-      - name: Run tests
-        id: tests
-        continue-on-error: true
-        env:
-          PROJECT: ${{ github.event.inputs.project || 'all' }}
-        run: |
-          case "$PROJECT" in
-            ui)    npm run test:ui ;;
-            api)   npm run test:api ;;
-            smoke) npm run test:smoke ;;
-            *)     npm test ;;
-          esac
+      - uses: actions/setup-node@v4
+        if: always()
+        with:
+          node-version: 22
 
       - name: Restore Allure history
         if: always()
@@ -75,7 +64,11 @@ jobs:
 
       - name: Generate Allure report
         if: always()
-        run: npm run allure:generate
+        run: |
+          printf 'Python=%s\nRun=GitHub Actions\nCommit=%s\n' "$(python --version | cut -d' ' -f2)" "${GITHUB_SHA::7}" > allure-results/environment.properties
+          npx --yes allure-commandline@2.46.1 generate allure-results -o allure-report --clean
+          for f in docs/*.html; do if [ -f "$f" ]; then cp "$f" allure-report/; fi; done
+          if [ -d gh-pages-old/load ]; then cp -r gh-pages-old/load allure-report/; fi
 
       - name: Publish Allure report to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'
@@ -85,14 +78,44 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-report
 
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report
-          retention-days: 14
-
       - name: Fail the job if tests failed
         if: steps.tests.outcome == 'failure'
         run: exit 1
+
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start the Bookshop
+        run: |
+          mkdir -p load-results
+          BOOKSHOP_DB=$PWD/load-results/load.db nohup uvicorn services.bookshop.app:app --port 8000 \
+            --log-level warning --no-server-header > load-results/server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/health && exit 0; sleep 1; done
+          exit 1
+
+      - name: Locust, 30 users for 45 s
+        run: |
+          locust -f load/locustfile.py --headless -u 30 -r 10 -t 45s --host http://127.0.0.1:8000 \
+            --csv load-results/run --html load-results/locust.html --only-summary
+
+      - name: Check the budgets
+        run: python scripts/load_check.py load-results/run_stats.csv | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the Locust report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locust-report
+          path: load-results
+          retention-days: 14
