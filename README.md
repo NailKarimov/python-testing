@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml/badge.svg)](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml)
 [![Allure report](https://img.shields.io/badge/report-Allure-orange)](https://nailkarimov.github.io/python-testing/)
+[![Release](https://img.shields.io/github/v/release/NailKarimov/python-testing)](https://github.com/NailKarimov/python-testing/releases)
 
 ### ▶ Open online
 
@@ -89,6 +90,8 @@ docs/                  test plan, test report, guides
 - the `test` job runs ruff, mypy and `pytest -n 4`, then publishes the Allure report with history to GitHub Pages;
 - the `load` job runs Locust for 45 s against the running service and writes the p95 and error-rate budgets to
   the job summary.
+
+Releases: committing `.github/releases/<tag>.md` runs the Release workflow, which creates the tag and the GitHub release with that file as its notes.
 
 ## Documentation
 
