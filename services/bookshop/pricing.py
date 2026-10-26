@@ -1,6 +1,6 @@
 """Money rules of the bookshop. Kept apart from the web layer so they can be tested on their own (Hypothesis)."""
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 CENT = Decimal("0.01")
 FREE_SHIPPING_FROM = Decimal("50.00")
@@ -9,8 +9,8 @@ COUPONS = {"SAVE10": Decimal("0.10"), "SAVE25": Decimal("0.25")}
 
 
 def money(value: Decimal) -> Decimal:
-    """Rounds to cents, half up (the way a till does), not banker's rounding."""
-    return value.quantize(CENT, rounding=ROUND_HALF_UP)
+    """Rounds to cents."""
+    return round(value, 2)
 
 
 def quote(lines: list[tuple[Decimal, int]], coupon: str | None = None) -> dict[str, Decimal]:
