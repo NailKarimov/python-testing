@@ -3,6 +3,15 @@
 [![Tests](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml/badge.svg)](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml)
 [![Allure report](https://img.shields.io/badge/report-Allure-orange)](https://nailkarimov.github.io/python-testing/)
 
+### ▶ Open online
+
+| Page | What it is |
+| --- | --- |
+| **[Allure test report](https://nailkarimov.github.io/python-testing/)** | latest CI run |
+| [Python tests](https://nailkarimov.github.io/python-testing/python.html) | interactive guide |
+
+Click these links: opening an `.html` file in the file list shows its source code, GitHub does not run it.
+
 API, contract, property-based, integration, security and load tests **in Python**. They run against a Bookshop
 API of our own, written with FastAPI and SQLite.
 
