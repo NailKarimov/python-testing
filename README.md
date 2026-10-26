@@ -11,6 +11,7 @@
 | --- | --- |
 | **[Allure test report](https://nailkarimov.github.io/python-testing/)** | latest CI run |
 | [Python tests](https://nailkarimov.github.io/python-testing/python.html) | interactive guide |
+| [Demo pull request #6](https://github.com/NailKarimov/python-testing/pull/6) | a harmless-looking change that CI rejects: red check, annotation on the test, summary comment |
 
 Click these links: opening an `.html` file in the file list shows its source code, GitHub does not run it.
 
@@ -83,7 +84,7 @@ tests/property/        Hypothesis properties of the money rules
 tests/integration/     what is really stored in SQLite, races
 tests/security/        tokens, BOLA, headers, error bodies
 load/                  Locust scenarios
-scripts/               load budgets, mutation check
+scripts/               load budgets, mutation check, CI report for pull requests
 docs/                  test plan, test report, guides
 ```
 
@@ -95,6 +96,8 @@ docs/                  test plan, test report, guides
   the job summary.
 
 Releases: committing `.github/releases/<tag>.md` runs the Release workflow, which creates the tag and the GitHub release with that file as its notes.
+
+On pull requests, failed tests are annotated on their line and CI comments a summary (passed, failed, time, the failing example); `scripts/ci_report.py` turns the JUnit XML into both. [PR #6](https://github.com/NailKarimov/python-testing/pull/6) is kept open to show it.
 
 ## Documentation
 
