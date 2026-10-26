@@ -3,7 +3,7 @@ generated ones, each checked against rules that must hold for every basket."""
 
 from decimal import Decimal
 
-from hypothesis import example, given
+from hypothesis import example, given, note
 from hypothesis import strategies as st
 
 from services.bookshop.pricing import COUPONS, FREE_SHIPPING_FROM, SHIPPING, quote
@@ -66,4 +66,8 @@ def test_service_pricing_agrees_with_the_independent_oracle(
 
     rate = {None: "0", "SAVE10": "0.10", "SAVE25": "0.25"}[coupon.upper() if coupon else None]
     want = expected_total([(str(p), q) for p, q in basket], rate)
-    assert {k: str(v) for k, v in quote(basket, coupon).items()} == want
+    got = {k: str(v) for k, v in quote(basket, coupon).items()}
+    note(f"basket: {[(str(p), q) for p, q in basket]}, coupon: {coupon}")
+    note(f"service: {got}")
+    note(f"oracle:  {want}")
+    assert got == want

@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write # publish the Allure report to the gh-pages branch
+  pull-requests: write # comment the test summary on pull requests
 
 concurrency:
   group: tests-${{ github.ref }}
@@ -39,7 +40,27 @@ jobs:
       - name: Tests (API, contract, property-based, integration, security)
         id: tests
         continue-on-error: true
-        run: pytest -n 4 --alluredir=allure-results
+        run: pytest -n 4 --alluredir=allure-results --junitxml=junit.xml
+
+      - name: Annotate failures and write the summary
+        if: always() && hashFiles('junit.xml') != ''
+        run: |
+          python scripts/ci_report.py junit.xml summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment the summary on the pull request
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && hashFiles('summary.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          { echo '<!-- test-summary -->'; echo '## Test results'; echo; cat summary.md; } > comment.md
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --jq '[.[] | select(.body | startswith("<!-- test-summary -->"))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@comment.md >/dev/null
+          else
+            gh pr comment "$PR" --body-file comment.md
+          fi
 
       - uses: actions/setup-java@v6 # Allure CLI needs Java
         if: always()

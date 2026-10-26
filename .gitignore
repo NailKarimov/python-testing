@@ -9,3 +9,6 @@ allure-results/
 allure-report/
 load-results/
 *.db
+junit.xml
+summary.md
+comment.md
