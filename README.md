@@ -3,6 +3,7 @@
 [![Tests](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml/badge.svg)](https://github.com/NailKarimov/python-testing/actions/workflows/tests.yml)
 [![Allure report](https://img.shields.io/badge/report-Allure-orange)](https://nailkarimov.github.io/python-testing/)
 [![Release](https://img.shields.io/github/v/release/NailKarimov/python-testing)](https://github.com/NailKarimov/python-testing/releases)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/NailKarimov/python-testing?quickstart=1)
 
 ### ▶ Open online
 
@@ -53,6 +54,8 @@ Banker's rounding (mutant M1) is caught **only** by the Hypothesis oracle: none 
 exact half cent.
 
 ## Running it
+
+No local setup: the **Open in GitHub Codespaces** badge starts a browser VS Code with this repository, its tools and Docker; the container runs `pip install -r requirements.txt` on creation, then `pytest -n 4` works in the terminal.
 
 Requirements: Python 3.13; Java 17+ only for a local Allure report.
 
