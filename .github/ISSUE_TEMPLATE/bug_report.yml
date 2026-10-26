@@ -1,0 +1,79 @@
+name: Bug report
+description: A defect in the system under test, written to the same layout as the issues in this repository.
+title: "[ID] Short summary of what is wrong"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One defect per issue. If a test pins the defect, link it: the test turns red the day the defect is fixed.
+  - type: input
+    id: defect-id
+    attributes:
+      label: Defect ID
+      description: The id used in the test report and in `test.fail()`, for example SS-4 or UI-A11Y-2.
+      placeholder: SS-19
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Impact on users or data, not how hard the fix is.
+      options:
+        - critical — security or data loss, a core flow is blocked
+        - major — a feature is wrong or unusable for a group of users
+        - minor — wrong but has a workaround
+        - trivial — cosmetic or wording
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P1 — fix now
+        - P2 — next release
+        - P3 — when convenient
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Version of the system under test, browser or device, where it ran.
+      placeholder: Juice Shop v20.3.0 in Docker, Chromium 141, GitHub Actions ubuntu-24.04
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What should happen, with the source of the expectation (spec, standard, WCAG criterion).
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: input
+    id: test
+    attributes:
+      label: Test that pins it
+      placeholder: tests/sockshop/payment.spec.ts
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshot, trace, request and response, log lines.

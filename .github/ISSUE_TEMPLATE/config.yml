@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Test report
+    url: https://github.com/NailKarimov/qa-project-template/blob/main/docs/portfolio-standard.md
+    about: How defects are recorded in this portfolio (test plan, test report, pinned tests).

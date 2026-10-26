@@ -38,6 +38,8 @@ API of our own, written with FastAPI and SQLite.
 
 ## Findings
 
+These bugs are recorded as closed issues in [Issues](https://github.com/NailKarimov/python-testing/issues?q=is%3Aissue+is%3Aclosed+label%3Abug), each with steps, expected and actual results and the fix.
+
 | Found by | Defect in our own service | Fix |
 | --- | --- | --- |
 | Schemathesis | `GET /books/2^63` reached SQLite and answered 500 | ids limited to 1 … 2^63 − 1 in the path |
